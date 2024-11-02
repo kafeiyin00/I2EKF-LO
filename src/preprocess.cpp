@@ -774,6 +774,8 @@ void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointClo
         case L515:
             l515_handler(msg);
             break;
+        case MARSIM:
+            marsim_handler(msg);
 
         default:
             printf("Error LiDAR Type");
@@ -794,6 +796,9 @@ void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointClo
             break;
         case L515:
             l515_handler(msg);
+            break;
+        case MARSIM:
+            marsim_handler(msg);
             break;
 
         default:
@@ -919,6 +924,67 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
         }
     }
 }
+
+void Preprocess::marsim_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    static int scan_count = 0;
+    scan_count++;
+
+    pl_surf.clear();
+    pl_corn.clear();
+    pl_full.clear();
+
+    pt_surf.clear();
+
+
+    pcl::PointCloud<pcl::PointXYZ> pl_orig;
+    pcl::fromROSMsg(*msg, pl_orig);
+    int plsize = pl_orig.points.size();
+    pl_surf.reserve(plsize);
+
+    bool is_first[MAX_LINE_NUM];
+    double yaw_fp[MAX_LINE_NUM] = {0};     // yaw of first scan point
+    double omega_l = 3.61;       // scan angular velocity (deg/ms)
+    float yaw_last[MAX_LINE_NUM] = {0.0};  // yaw of last scan point
+    float time_last[MAX_LINE_NUM] = {0.0}; // last offset time
+
+    given_offset_time = false;
+
+    int real_point_filter_num = point_filter_num;
+    if (scan_count <= cut_frame_init_num)
+        real_point_filter_num = 1;
+
+    if(1)
+    {
+        for (int i = 0; i < plsize; i++)
+        {
+            PointType added_pt;
+            added_pt.normal_x = 0;
+            added_pt.normal_y = 0;
+            added_pt.normal_z = 0;
+            added_pt.x = pl_orig.points[i].x;
+            added_pt.y = pl_orig.points[i].y;
+            added_pt.z = pl_orig.points[i].z;
+            added_pt.intensity = 0;
+            added_pt.curvature = i*1e-9; //ms
+
+            double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
+            if ( dist < blind * blind || isnan(added_pt.x) || isnan(added_pt.y) || isnan(added_pt.z))
+                continue;
+
+            if (i % real_point_filter_num == 0)
+            {
+                pl_surf.points.push_back(added_pt);
+                Point3D point;
+                point.raw_point = added_pt.getVector3fMap().cast<double>();
+                point.relative_time = added_pt.curvature;
+                point.intensity = added_pt.intensity;
+                pt_surf.push_back(point);
+            }
+        }
+    }
+}
+
 
 void Preprocess::l515_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
