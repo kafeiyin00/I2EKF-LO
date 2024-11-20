@@ -1,5 +1,5 @@
 common:
-    lid_topic:  "/quad0_pcl_render_node/sensor_cloud"
+    lid_topic:  "/rotorframepoints"
 
 preprocess:
     lidar_type: 7               
@@ -14,15 +14,15 @@ initialization:
     cut_frame_init_num: 5
 
 mapping:
-    filter_size_surf: 0.2
-    filter_size_map: 0.2
+    filter_size_surf: 0.3
+    filter_size_map: 0.3
     gyr_cov: 0.01
     acc_cov: 0.01
     det_range: 100.0
     cov_lidar: 0.001
     max_iteration: 20
     max_undistort: 5
-    cube_side_length: 2000
+    cube_side_length: 500
 
 adaptive_cov:
     use: false
