@@ -5,7 +5,7 @@ preprocess:
     lidar_type: 7               
     feature_extract_en: false
     scan_line: 6
-    blind: 1
+    blind: 0.3
     point_filter_num: 1
 
 initialization:
@@ -14,8 +14,8 @@ initialization:
     cut_frame_init_num: 5
 
 mapping:
-    filter_size_surf: 0.3
-    filter_size_map: 0.3
+    filter_size_surf: 0.2
+    filter_size_map: 0.2
     gyr_cov: 0.01
     acc_cov: 0.01
     det_range: 100.0
